@@ -1,22 +1,34 @@
 #include <bits/stdc++.h>
-#include <iostream>
-#include <string>
-#include <math.h>
 using namespace std;
 vector<int> G[200000];
-void dfs(int v, long long *c, int *q, int qi, long long x){
-    q[v]=qi;//query id
-    c[v]+=x;
+// v:頂点番号
+// depth:頂点iの深さ
+// id:現在の深さ
+void dfs_depth(int v, int *depth, int id){
+    depth[v]=id;
     for(int i=0;i<G[v].size();i++){
-        if(q[G[v][i]]<qi)dfs(G[v][i],c,q,qi,x);
+        if(depth[G[v][i]]==0)dfs_depth(G[v][i],depth,id+1);
+    }
+}
+// v:頂点番号
+// c:頂点iに書かれている整数
+// dc:頂点iでの累積和の変化地
+// sc:現在の累積和
+void dfs_apply(int v, long long *c, long long *dc, bool *visited, long long sc){
+    c[v]=sc+dc[v];
+    visited[v]=true;
+    for(int i=0;i<G[v].size();i++){
+        if(visited[G[v][i]]==false)dfs_apply(G[v][i],c,dc,visited, sc+dc[v]);
     }
 }
 int main(){
     int n;
     cin >> n;
     long long c[n]={0};
-    int qi[n]={0};
-    int i,j,a,b;
+    long long dc[n]={0};//v_iから累積輪がいくら増えるか
+    int depth[n]={0};//v_iの深さ
+
+    int i,j,a,b,sab;
     int as[n],bs[n];
     for(i=0;i<n-1;i++){
         cin >> a >> b;
@@ -27,6 +39,8 @@ int main(){
         G[a].push_back(b);
         G[b].push_back(a);
     }
+    //v_0を根に深さを計算
+    dfs_depth(0, depth,1);
     int q;
     cin >> q;
     int t,e;
@@ -34,31 +48,23 @@ int main(){
     for(i=0;i<q;i++){
         cin >> t >> e >> x;
         e-=1;
+        //根に近い側をaにする
+        a=as[e];
+        b=bs[e];
+        if(depth[a]>depth[b]){
+            a=bs[e];
+            b=as[e];
+            t=(t==1)?2:1;//tを反転
+        }
         if(t==1){
-            a=as[e];
-            qi[a]=i;
-            c[a]+=x;
-            for(j=0;j<G[a].size();j++){
-                b=bs[e];
-
-                if(G[a][j]==b) continue;
-                dfs(G[a][j],c,qi,i,x);
-
-            }
+            dc[0]+=x;
+            dc[b]-=x;
         }else{
-            b=bs[e];
-            qi[b]=i;
-            c[b]+=x;
-            for(j=0;j<G[b].size();j++){
-                a=as[e];
-
-                if(G[b][j]==a) continue;
-                dfs(G[b][j],c,qi,i,x);
-
-            }
-
+            dc[b]+=x;
         }
     }
+    bool visited[n]={false};
+    dfs_apply(0, c, dc,visited, 0);
     for(i=0;i<n;i++){
         cout << c[i] << endl;
     }
