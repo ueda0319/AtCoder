@@ -29,13 +29,8 @@ int main(){
         if(ki[i]){
             p[i]=1;
         }else{
-            if(i+m+1<=n){
-                l=m;
-            }else{
-                l=n-i;
-            }
-            p[i]=ps/l;
-            q[i]=qs/l+1.0;
+            p[i]=ps/m;
+            q[i]=qs/m+1.0;
         }
     }
     if(p[0]>=1){
